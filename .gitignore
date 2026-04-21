@@ -1,0 +1,46 @@
+## .NET
+bin/
+obj/
+
+## SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+## Workspace files
+*.code-workspace
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Rider
+.idea/
+
+## VS Code
+.vscode/
+
+## Environment / secrets
+appsettings.Development.json
+*.pfx
+*.p12
+
+## OS
+.DS_Store
+Thumbs.db
