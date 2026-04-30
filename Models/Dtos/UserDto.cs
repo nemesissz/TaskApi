@@ -7,6 +7,8 @@ public class UserDto
     public string Username { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public string? Department { get; set; }
+    public Guid? MuessiseId { get; set; }
+    public Guid? BolmeId { get; set; }
     public DateTime? LastLoginAt { get; set; }
 }
 
@@ -16,4 +18,6 @@ public class UpdateUserDto
     public string FullName { get; set; } = string.Empty;
     public string Role { get; set; } = "İşçi";
     public string? NewPassword { get; set; }
+    public Guid? MuessiseId { get; set; }
+    public Guid? BolmeId { get; set; }
 }

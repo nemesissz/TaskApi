@@ -28,7 +28,7 @@ namespace TaskApi.Controllers
         public async Task<IActionResult> GetAll()
         {
             var user = await _userManager.FindByIdAsync(CurrentUserId.ToString());
-            if (user?.Role != "Admin") return Forbid();
+            if (user?.Role is not ("Admin" or "BolmeAdmin" or "SuperAdmin")) return Forbid();
 
             var logs = await _context.ActivityLogs
                 .OrderByDescending(l => l.CreatedAt)

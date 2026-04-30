@@ -14,4 +14,7 @@ public class RegisterDto
     public string Password { get; set; } = string.Empty;
 
     public string Role { get; set; } = "İşçi";
+
+    public Guid? MuessiseId { get; set; }
+    public Guid? BolmeId { get; set; }
 }

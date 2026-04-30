@@ -30,7 +30,7 @@ namespace TaskApi.Controllers
         private async Task<bool> IsAdmin()
         {
             var user = await _userManager.FindByIdAsync(CurrentUserId.ToString());
-            return user?.Role == "Admin";
+            return user?.Role is "Admin" or "BolmeAdmin" or "SuperAdmin";
         }
 
         [HttpGet]
@@ -39,6 +39,7 @@ namespace TaskApi.Controllers
             var login = CurrentUserLogin;
             var announcements = await _context.Announcements
                 .Include(a => a.Reads)
+                .Include(a => a.Creator)
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
@@ -55,6 +56,7 @@ namespace TaskApi.Controllers
 
             var announcements = await _context.Announcements
                 .Include(a => a.Reads)
+                .Include(a => a.Creator)
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
@@ -127,7 +129,8 @@ namespace TaskApi.Controllers
             CreatedAt = a.CreatedAt,
             IsForAll = a.IsForAll,
             Recipients = a.Recipients,
-            ReadByLogins = a.Reads.Select(r => r.UserLogin).ToList()
+            ReadByLogins = a.Reads.Select(r => r.UserLogin).ToList(),
+            CreatorLogin = a.Creator?.UserName ?? string.Empty
         };
     }
 }

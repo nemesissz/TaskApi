@@ -106,8 +106,6 @@ public class TaskService : ITaskService
     public async Task<TaskResponseDto> UpdateTaskAsync(Guid taskId, UpdateTaskDto dto, Guid requesterId)
     {
         var task = await _context.Tasks
-            .Include(t => t.Assignments)
-            .Include(t => t.Files)
             .FirstOrDefaultAsync(t => t.Id == taskId)
             ?? throw new KeyNotFoundException("Task tapılmadı.");
 
@@ -118,29 +116,31 @@ public class TaskService : ITaskService
         task.Note = dto.Note;
         task.Deadline = dto.Deadline;
 
-        // Update assignments
-        _context.TaskAssignments.RemoveRange(task.Assignments);
+        var existingAssignments = await _context.TaskAssignments
+            .Where(a => a.TaskId == taskId).ToListAsync();
+        _context.TaskAssignments.RemoveRange(existingAssignments);
         if (dto.AssigneeIds.Any())
         {
-            task.Assignments = dto.AssigneeIds.Select(id => new TaskAssignment
+            _context.TaskAssignments.AddRange(dto.AssigneeIds.Select(id => new TaskAssignment
             {
                 AssigneeId = id,
                 TaskId = taskId
-            }).ToList();
+            }));
         }
 
-        // Replace files
-        _context.TaskFiles.RemoveRange(task.Files);
+        var existingFiles = await _context.TaskFiles
+            .Where(f => f.TaskId == taskId).ToListAsync();
+        _context.TaskFiles.RemoveRange(existingFiles);
         if (dto.Files.Any())
         {
-            task.Files = dto.Files.Select(f => new TaskFile
+            _context.TaskFiles.AddRange(dto.Files.Select(f => new TaskFile
             {
                 FileName = f.FileName,
                 FileSize = f.FileSize,
                 ContentType = f.ContentType,
                 Base64Data = f.Base64Data,
                 TaskId = taskId
-            }).ToList();
+            }));
         }
 
         await _context.SaveChangesAsync();
@@ -205,6 +205,29 @@ public class TaskService : ITaskService
             Text = comment.Text,
             CreatedAt = comment.CreatedAt
         };
+    }
+
+    public async Task<List<TaskResponseDto>> GetTasksScopedAsync(Guid? bolmeId, Guid? muessiseId)
+    {
+        List<Guid> userIds;
+        if (bolmeId.HasValue)
+            userIds = await _context.Users.Where(u => u.BolmeId == bolmeId).Select(u => u.Id).ToListAsync();
+        else if (muessiseId.HasValue)
+            userIds = await _context.Users.Where(u => u.MuessiseId == muessiseId).Select(u => u.Id).ToListAsync();
+        else
+            return [];
+
+        var taskIds = await _context.Tasks
+            .Where(t => userIds.Contains(t.CreatorId) || t.Assignments.Any(a => userIds.Contains(a.AssigneeId)))
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => t.Id)
+            .Distinct()
+            .ToListAsync();
+
+        var result = new List<TaskResponseDto>();
+        foreach (var id in taskIds)
+            result.Add(await MapToResponseDto(id));
+        return result;
     }
 
     public async Task DeleteAsync(Guid taskId, Guid requesterId)

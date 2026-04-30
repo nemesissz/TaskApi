@@ -9,6 +9,7 @@ public class AnnouncementDto
     public bool IsForAll { get; set; }
     public List<string> Recipients { get; set; } = [];
     public List<string> ReadByLogins { get; set; } = [];
+    public string CreatorLogin { get; set; } = string.Empty;
 }
 
 public class CreateAnnouncementDto

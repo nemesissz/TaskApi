@@ -39,8 +39,27 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var user = await _userManager.FindByIdAsync(CurrentUserId.ToString());
-        if (user?.Role != "Admin") return Forbid();
+        if (user?.Role is not ("Admin" or "BolmeAdmin" or "SuperAdmin")) return Forbid();
         return Ok(await _taskService.GetAllTasksAsync());
+    }
+
+    [HttpGet("scope")]
+    public async Task<IActionResult> GetInScope()
+    {
+        var user = await _userManager.FindByIdAsync(CurrentUserId.ToString());
+        if (user == null) return Unauthorized();
+
+        if (user.Role == "SuperAdmin")
+            return Ok(await _taskService.GetAllTasksAsync());
+        if (user.Role == "BolmeAdmin")
+            return Ok(await _taskService.GetTasksScopedAsync(user.BolmeId, null));
+        if (user.Role == "Admin")
+            return Ok(await _taskService.GetTasksScopedAsync(null, user.MuessiseId));
+
+        var my = await _taskService.GetMyTasksAsync(CurrentUserId);
+        var assigned = await _taskService.GetAssignedToMeAsync(CurrentUserId);
+        var all = my.Concat(assigned).GroupBy(t => t.Id).Select(g => g.First()).ToList();
+        return Ok(all);
     }
 
     [HttpGet("{id}")]

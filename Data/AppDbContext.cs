@@ -15,5 +15,32 @@ namespace TaskApi.Data
         public DbSet<Announcement> Announcements => Set<Announcement>();
         public DbSet<AnnouncementRead> AnnouncementReads => Set<AnnouncementRead>();
         public DbSet<ActivityLogItem> ActivityLogs => Set<ActivityLogItem>();
+        public DbSet<Muessise> Muessiseler => Set<Muessise>();
+        public DbSet<Bolme> Bolmeler => Set<Bolme>();
+        public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+        public DbSet<Note> Notes => Set<Note>();
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<AppUser>()
+                .HasOne(u => u.Muessise)
+                .WithMany(m => m.Users)
+                .HasForeignKey(u => u.MuessiseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<AppUser>()
+                .HasOne(u => u.Bolme)
+                .WithMany(b => b.Users)
+                .HasForeignKey(u => u.BolmeId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Bolme>()
+                .HasOne(b => b.Muessise)
+                .WithMany(m => m.Bolmeler)
+                .HasForeignKey(b => b.MuessiseId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }

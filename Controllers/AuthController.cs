@@ -37,7 +37,9 @@ namespace TaskApi.Controllers
                 FullName = dto.FullName,
                 Department = dto.Department,
                 UserName = dto.Username,
-                Role = dto.Role
+                Role = dto.Role,
+                MuessiseId = dto.MuessiseId,
+                BolmeId = dto.BolmeId
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -73,6 +75,8 @@ namespace TaskApi.Controllers
                     Username = user.UserName ?? string.Empty,
                     Role = user.Role,
                     Department = user.Department,
+                    MuessiseId = user.MuessiseId,
+                    BolmeId = user.BolmeId,
                     LastLoginAt = user.LastLoginAt
                 }
             });
@@ -93,6 +97,8 @@ namespace TaskApi.Controllers
                 Username = user.UserName ?? string.Empty,
                 Role = user.Role,
                 Department = user.Department,
+                MuessiseId = user.MuessiseId,
+                BolmeId = user.BolmeId,
                 LastLoginAt = user.LastLoginAt
             });
         }
@@ -104,7 +110,9 @@ namespace TaskApi.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
                 new Claim("fullName", user.FullName),
-                new Claim("role", user.Role)
+                new Claim("role", user.Role),
+                new Claim("muessiseId", user.MuessiseId?.ToString() ?? ""),
+                new Claim("bolmeId", user.BolmeId?.ToString() ?? "")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
