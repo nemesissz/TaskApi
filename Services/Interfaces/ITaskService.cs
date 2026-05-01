@@ -7,7 +7,7 @@ public interface ITaskService
     Task<TaskResponseDto> GetByIdAsync(Guid taskId, Guid requesterId);
     Task<TaskResponseDto> UpdateTaskAsync(Guid taskId, UpdateTaskDto dto, Guid requesterId);
     Task UpdateStatusAsync(Guid taskId, Guid userId, TaskItemStatus status);
-    Task CompleteTaskAsync(Guid taskId, Guid requesterId);
+    Task CompleteTaskAsync(Guid taskId, Guid requesterId, bool value = true);
     Task<CommentDto> AddCommentAsync(Guid taskId, Guid authorId, AddCommentDto dto);
     Task DeleteAsync(Guid taskId, Guid requesterId);
     Task<List<TaskResponseDto>> GetTasksScopedAsync(Guid? bolmeId, Guid? muessiseId);

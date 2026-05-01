@@ -81,9 +81,9 @@ public class TasksController : ControllerBase
     }
 
     [HttpPatch("{id}/complete")]
-    public async Task<IActionResult> Complete(Guid id)
+    public async Task<IActionResult> Complete(Guid id, [FromBody] bool value = true)
     {
-        await _taskService.CompleteTaskAsync(id, CurrentUserId);
+        await _taskService.CompleteTaskAsync(id, CurrentUserId, value);
         return NoContent();
     }
 

@@ -179,7 +179,7 @@ public class TaskService : ITaskService
         await _context.SaveChangesAsync();
     }
 
-    public async Task CompleteTaskAsync(Guid taskId, Guid requesterId)
+    public async Task CompleteTaskAsync(Guid taskId, Guid requesterId, bool value = true)
     {
         var task = await _context.Tasks
             .FirstOrDefaultAsync(t => t.Id == taskId)
@@ -188,8 +188,8 @@ public class TaskService : ITaskService
         if (task.CreatorId != requesterId)
             throw new UnauthorizedAccessException("Yalnız yaradıcı tamamlaya bilər.");
 
-        task.IsCompleted = true;
-        task.CompletedAt = DateTime.UtcNow;
+        task.IsCompleted = value;
+        task.CompletedAt = value ? DateTime.UtcNow : null;
         await _context.SaveChangesAsync();
     }
 
