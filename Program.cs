@@ -131,6 +131,15 @@ namespace TaskApi
                     );");
                 // MSSQL-də bu bloku SİL — migration ChatMessages cədvəlini özü yaradır.
 
+                // IsNezaretci sütununu əlavə et (köhnə DB üçün)
+                // MSSQL-də: ALTER TABLE TaskAssignments ADD IsNezaretci BIT NOT NULL DEFAULT 0
+                try
+                {
+                    await db.Database.ExecuteSqlRawAsync(
+                        "ALTER TABLE TaskAssignments ADD COLUMN IsNezaretci INTEGER NOT NULL DEFAULT 0;");
+                }
+                catch { /* Sütun artıq mövcuddursa xəta ver, keç */ }
+
                 // SuperAdmin seed
                 var superAdminExists = userManager.Users.Any(u => u.Role == "SuperAdmin");
                 if (!superAdminExists)

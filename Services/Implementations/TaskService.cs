@@ -109,8 +109,12 @@ public class TaskService : ITaskService
             .FirstOrDefaultAsync(t => t.Id == taskId)
             ?? throw new KeyNotFoundException("Task tapılmadı.");
 
-        if (task.CreatorId != requesterId)
-            throw new UnauthorizedAccessException("Yalnız yaradıcı redaktə edə bilər.");
+        bool isCreator = task.CreatorId == requesterId;
+        bool isNezaretci = await _context.TaskAssignments
+            .AnyAsync(a => a.TaskId == taskId && a.AssigneeId == requesterId && a.IsNezaretci);
+
+        if (!isCreator && !isNezaretci)
+            throw new UnauthorizedAccessException("Yalnız yaradıcı və ya nəzarətçi redaktə edə bilər.");
 
         task.Title = dto.Title;
         task.Note = dto.Note;
@@ -120,18 +124,31 @@ public class TaskService : ITaskService
         var existingAssignments = await _context.TaskAssignments
             .Where(a => a.TaskId == taskId).ToListAsync();
 
-        var existingIds = existingAssignments.Select(a => a.AssigneeId).ToHashSet();
-        var newIds = dto.AssigneeIds.ToHashSet();
+        var existingMap = existingAssignments.ToDictionary(a => a.AssigneeId);
+        var newIds = dto.Assignees.Select(a => a.Id).ToHashSet();
 
-        // Remove only assignees no longer in the list (preserves their saved status)
+        // Remove assignees no longer in the list
         _context.TaskAssignments.RemoveRange(
             existingAssignments.Where(a => !newIds.Contains(a.AssigneeId)));
 
-        // Add only truly new assignees
-        _context.TaskAssignments.AddRange(
-            dto.AssigneeIds
-                .Where(id => !existingIds.Contains(id))
-                .Select(id => new TaskAssignment { AssigneeId = id, TaskId = taskId }));
+        foreach (var item in dto.Assignees)
+        {
+            if (existingMap.TryGetValue(item.Id, out var existing))
+            {
+                // Update nezaretci flag, preserve status
+                existing.IsNezaretci = item.IsNezaretci;
+            }
+            else
+            {
+                // New assignee
+                _context.TaskAssignments.Add(new TaskAssignment
+                {
+                    AssigneeId = item.Id,
+                    TaskId = taskId,
+                    IsNezaretci = item.IsNezaretci
+                });
+            }
+        }
 
         var existingFiles = await _context.TaskFiles
             .Where(f => f.TaskId == taskId).ToListAsync();
@@ -273,13 +290,16 @@ public class TaskService : ITaskService
             CompletedAt = task.CompletedAt,
             CreatorName = task.Creator.FullName,
             CreatorLogin = task.Creator.UserName ?? string.Empty,
-            Assignees = task.Assignments.Select(a => new AssigneeDto
-            {
-                UserId = a.AssigneeId,
-                FullName = a.Assignee.FullName,
-                Login = a.Assignee.UserName ?? string.Empty,
-                Status = a.Status.ToString()
-            }).ToList(),
+            Assignees = task.Assignments
+                .OrderByDescending(a => a.IsNezaretci)
+                .Select(a => new AssigneeDto
+                {
+                    UserId = a.AssigneeId,
+                    FullName = a.Assignee.FullName,
+                    Login = a.Assignee.UserName ?? string.Empty,
+                    Status = a.Status.ToString(),
+                    IsNezaretci = a.IsNezaretci
+                }).ToList(),
             Comments = task.Comments
                 .OrderBy(c => c.CreatedAt)
                 .Select(c => new CommentDto

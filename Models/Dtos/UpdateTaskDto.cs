@@ -7,11 +7,17 @@ public class UpdateTaskDto
 
     public string? Note { get; set; }
 
-    public List<Guid> AssigneeIds { get; set; } = [];
+    public List<AssigneeUpdateDto> Assignees { get; set; } = [];
 
     public DateTime? Deadline { get; set; }
 
     public List<CreateTaskFileDto> Files { get; set; } = [];
 
     public int? Priority { get; set; }
+}
+
+public class AssigneeUpdateDto
+{
+    public Guid Id { get; set; }
+    public bool IsNezaretci { get; set; }
 }
