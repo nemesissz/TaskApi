@@ -119,15 +119,19 @@ public class TaskService : ITaskService
 
         var existingAssignments = await _context.TaskAssignments
             .Where(a => a.TaskId == taskId).ToListAsync();
-        _context.TaskAssignments.RemoveRange(existingAssignments);
-        if (dto.AssigneeIds.Any())
-        {
-            _context.TaskAssignments.AddRange(dto.AssigneeIds.Select(id => new TaskAssignment
-            {
-                AssigneeId = id,
-                TaskId = taskId
-            }));
-        }
+
+        var existingIds = existingAssignments.Select(a => a.AssigneeId).ToHashSet();
+        var newIds = dto.AssigneeIds.ToHashSet();
+
+        // Remove only assignees no longer in the list (preserves their saved status)
+        _context.TaskAssignments.RemoveRange(
+            existingAssignments.Where(a => !newIds.Contains(a.AssigneeId)));
+
+        // Add only truly new assignees
+        _context.TaskAssignments.AddRange(
+            dto.AssigneeIds
+                .Where(id => !existingIds.Contains(id))
+                .Select(id => new TaskAssignment { AssigneeId = id, TaskId = taskId }));
 
         var existingFiles = await _context.TaskFiles
             .Where(f => f.TaskId == taskId).ToListAsync();

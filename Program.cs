@@ -15,12 +15,9 @@ namespace TaskApi
 
             builder.Services.AddDbContext<AppDbContext>(opt =>
                 opt.UseSqlite("Data Source=taskapi.db"));
-            // MSSQL-ə keçid üçün yuxarıdakı 2 sətri silib aşağıdakı ilə əvəz et:
             // builder.Services.AddDbContext<AppDbContext>(opt =>
             //     opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
-            // Əlavə olaraq csproj-da paketi dəyiş:
-            //   Sil:   <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" ... />
-            //   Əlavə: <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+            
 
 
             builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
@@ -147,23 +144,6 @@ namespace TaskApi
                     await userManager.CreateAsync(superAdmin, "SuperAdmin@123");
                 }
 
-                // Default Admin seed
-                var existingAdmin = await userManager.FindByNameAsync("admin");
-                if (existingAdmin is null)
-                {
-                    var admin = new AppUser
-                    {
-                        UserName = "admin",
-                        FullName = "Administrator",
-                        Role = "SuperAdmin"
-                    };
-                    await userManager.CreateAsync(admin, "Admin@123");
-                }
-                else if (existingAdmin.Role != "SuperAdmin")
-                {
-                    existingAdmin.Role = "SuperAdmin";
-                    await userManager.UpdateAsync(existingAdmin);
-                }
             }
 
             if (app.Environment.IsDevelopment())
