@@ -12,4 +12,6 @@ public class UpdateTaskDto
     public DateTime? Deadline { get; set; }
 
     public List<CreateTaskFileDto> Files { get; set; } = [];
+
+    public int? Priority { get; set; }
 }

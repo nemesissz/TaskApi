@@ -115,6 +115,7 @@ public class TaskService : ITaskService
         task.Title = dto.Title;
         task.Note = dto.Note;
         task.Deadline = dto.Deadline;
+        if (dto.Priority.HasValue) task.Priority = (Priority)dto.Priority.Value;
 
         var existingAssignments = await _context.TaskAssignments
             .Where(a => a.TaskId == taskId).ToListAsync();
