@@ -12,9 +12,11 @@ public class TaskResponseDto
     public DateTime? CompletedAt { get; set; }
     public string CreatorName { get; set; } = string.Empty;
     public string CreatorLogin { get; set; } = string.Empty;
+    public List<string> Oxumamislar { get; set; } = [];
     public List<AssigneeDto> Assignees { get; set; } = [];
     public List<CommentDto> Comments { get; set; } = [];
     public List<TaskFileDto> Files { get; set; } = [];
+    public List<SubTaskDto> SubTasks { get; set; } = [];
 }
 
 public class AssigneeDto
@@ -32,6 +34,14 @@ public class CommentDto
     public string AuthorName { get; set; } = string.Empty;
     public string AuthorLogin { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}
+
+public class SubTaskDto
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public bool IsCompleted { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

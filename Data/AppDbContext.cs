@@ -19,16 +19,19 @@ namespace TaskApi.Data
         public DbSet<Bolme> Bolmeler => Set<Bolme>();
         public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
         public DbSet<Note> Notes => Set<Note>();
+        public DbSet<SubTask> SubTasks => Set<SubTask>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
+            // NoAction: Muessise silinəndə AppUser.MuessiseId-ni silməzdən əvvəl
+            // kodda null etmək lazımdır (MSSQL çoxlu cascade yoluna icazə vermir)
             builder.Entity<AppUser>()
                 .HasOne(u => u.Muessise)
                 .WithMany(m => m.Users)
                 .HasForeignKey(u => u.MuessiseId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<AppUser>()
                 .HasOne(u => u.Bolme)
@@ -41,6 +44,24 @@ namespace TaskApi.Data
                 .WithMany(m => m.Bolmeler)
                 .HasForeignKey(b => b.MuessiseId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<TaskItem>()
+                .HasOne(t => t.Creator)
+                .WithMany(u => u.CreatedTasks)
+                .HasForeignKey(t => t.CreatorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<TaskAssignment>()
+                .HasOne(ta => ta.Task)
+                .WithMany(t => t.Assignments)
+                .HasForeignKey(ta => ta.TaskId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<TaskAssignment>()
+                .HasOne(ta => ta.Assignee)
+                .WithMany(u => u.Assignments)
+                .HasForeignKey(ta => ta.AssigneeId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

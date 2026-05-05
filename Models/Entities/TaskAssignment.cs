@@ -7,5 +7,6 @@
     public AppUser Assignee { get; set; } = null!;
     public TaskItemStatus Status { get; set; } = TaskItemStatus.Pending;
     public bool IsNezaretci { get; set; } = false;
+    public bool IsSeen { get; set; } = false;
     public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
 }

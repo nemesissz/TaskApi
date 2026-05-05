@@ -255,13 +255,75 @@ public class TaskService : ITaskService
     public async Task DeleteAsync(Guid taskId, Guid requesterId)
     {
         var task = await _context.Tasks
+            .Include(t => t.Assignments)
+            .Include(t => t.SubTasks)
             .FirstOrDefaultAsync(t => t.Id == taskId)
             ?? throw new KeyNotFoundException("Task tapılmadı.");
 
         if (task.CreatorId != requesterId)
             throw new UnauthorizedAccessException("Yalnız yaradıcı silə bilər.");
 
+        _context.TaskAssignments.RemoveRange(task.Assignments);
+        _context.SubTasks.RemoveRange(task.SubTasks);
         _context.Tasks.Remove(task);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task MarkAsReadAsync(Guid taskId, Guid userId)
+    {
+        var assignment = await _context.TaskAssignments
+            .FirstOrDefaultAsync(a => a.TaskId == taskId && a.AssigneeId == userId);
+        if (assignment != null && !assignment.IsSeen)
+        {
+            assignment.IsSeen = true;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<SubTaskDto> AddSubTaskAsync(Guid taskId, Guid requesterId, string title)
+    {
+        var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == taskId)
+            ?? throw new KeyNotFoundException("Task tapılmadı.");
+
+        if (task.CreatorId != requesterId)
+            throw new UnauthorizedAccessException("Yalnız yaradıcı alt tapşırıq əlavə edə bilər.");
+
+        var subTask = new SubTask { TaskId = taskId, Title = title };
+        _context.SubTasks.Add(subTask);
+        await _context.SaveChangesAsync();
+
+        return new SubTaskDto { Id = subTask.Id, Title = subTask.Title, IsCompleted = subTask.IsCompleted, CreatedAt = subTask.CreatedAt };
+    }
+
+    public async Task<SubTaskDto> ToggleSubTaskAsync(Guid taskId, Guid subTaskId, Guid requesterId)
+    {
+        var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == taskId)
+            ?? throw new KeyNotFoundException("Task tapılmadı.");
+
+        if (task.CreatorId != requesterId)
+            throw new UnauthorizedAccessException("Yalnız yaradıcı alt tapşırığı tamamlaya bilər.");
+
+        var subTask = await _context.SubTasks.FirstOrDefaultAsync(s => s.Id == subTaskId && s.TaskId == taskId)
+            ?? throw new KeyNotFoundException("Alt tapşırıq tapılmadı.");
+
+        subTask.IsCompleted = !subTask.IsCompleted;
+        await _context.SaveChangesAsync();
+
+        return new SubTaskDto { Id = subTask.Id, Title = subTask.Title, IsCompleted = subTask.IsCompleted, CreatedAt = subTask.CreatedAt };
+    }
+
+    public async Task DeleteSubTaskAsync(Guid taskId, Guid subTaskId, Guid requesterId)
+    {
+        var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == taskId)
+            ?? throw new KeyNotFoundException("Task tapılmadı.");
+
+        if (task.CreatorId != requesterId)
+            throw new UnauthorizedAccessException("Yalnız yaradıcı alt tapşırığı silə bilər.");
+
+        var subTask = await _context.SubTasks.FirstOrDefaultAsync(s => s.Id == subTaskId && s.TaskId == taskId)
+            ?? throw new KeyNotFoundException("Alt tapşırıq tapılmadı.");
+
+        _context.SubTasks.Remove(subTask);
         await _context.SaveChangesAsync();
     }
 
@@ -274,6 +336,7 @@ public class TaskService : ITaskService
             .Include(t => t.Comments)
                 .ThenInclude(c => c.Author)
             .Include(t => t.Files)
+            .Include(t => t.SubTasks)
             .FirstAsync(t => t.Id == taskId);
 
         return new TaskResponseDto
@@ -290,6 +353,10 @@ public class TaskService : ITaskService
             CompletedAt = task.CompletedAt,
             CreatorName = task.Creator.FullName,
             CreatorLogin = task.Creator.UserName ?? string.Empty,
+            Oxumamislar = task.Assignments
+                .Where(a => !a.IsSeen)
+                .Select(a => a.Assignee.UserName ?? string.Empty)
+                .ToList(),
             Assignees = task.Assignments
                 .OrderByDescending(a => a.IsNezaretci)
                 .Select(a => new AssigneeDto
@@ -309,6 +376,15 @@ public class TaskService : ITaskService
                     AuthorLogin = c.Author.UserName ?? string.Empty,
                     Text = c.Text,
                     CreatedAt = c.CreatedAt
+                }).ToList(),
+            SubTasks = task.SubTasks
+                .OrderBy(s => s.CreatedAt)
+                .Select(s => new SubTaskDto
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    IsCompleted = s.IsCompleted,
+                    CreatedAt = s.CreatedAt
                 }).ToList(),
             Files = task.Files.Select(f => new TaskFileDto
             {

@@ -47,7 +47,7 @@ namespace TaskApi.Controllers
             // Non-SuperAdmin users only get id+ad (for display/lookup purposes)
             if (current.Role != "SuperAdmin")
             {
-                return Ok(muessiseler.Select(m => new { m.Id, m.Ad }));
+                return Ok(muessiseler.Select(m => new { m.Id, m.Ad, m.Logo }));
             }
 
             return Ok(muessiseler.Select(m => new MuessiseDto
@@ -57,7 +57,8 @@ namespace TaskApi.Controllers
                 AdminUsername = m.AdminUsername,
                 YaranmaTarixi = m.YaranmaTarixi,
                 UserCount = m.Users.Count,
-                BolmeCount = m.Bolmeler.Count
+                BolmeCount = m.Bolmeler.Count,
+                Logo = m.Logo
             }));
         }
 
@@ -101,7 +102,8 @@ namespace TaskApi.Controllers
             {
                 Ad = dto.Ad.Trim(),
                 AdminUsername = dto.AdminUsername.Trim(),
-                YaranmaTarixi = DateTime.UtcNow
+                YaranmaTarixi = DateTime.UtcNow,
+                Logo = dto.Logo
             };
 
             _context.Muessiseler.Add(muessise);
@@ -130,7 +132,31 @@ namespace TaskApi.Controllers
                 AdminUsername = muessise.AdminUsername,
                 YaranmaTarixi = muessise.YaranmaTarixi,
                 UserCount = 1,
-                BolmeCount = 0
+                BolmeCount = 0,
+                Logo = muessise.Logo
+            });
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateMuessiseDto dto)
+        {
+            if (!await IsSuperAdmin()) return Forbid();
+
+            var muessise = await _context.Muessiseler.FindAsync(id);
+            if (muessise is null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(dto.Ad)) muessise.Ad = dto.Ad.Trim();
+            if (dto.Logo != null) muessise.Logo = dto.Logo == "" ? null : dto.Logo;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new MuessiseDto
+            {
+                Id = muessise.Id,
+                Ad = muessise.Ad,
+                AdminUsername = muessise.AdminUsername,
+                YaranmaTarixi = muessise.YaranmaTarixi,
+                Logo = muessise.Logo
             });
         }
 

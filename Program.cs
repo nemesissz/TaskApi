@@ -98,6 +98,7 @@ namespace TaskApi
                 // Bundan sonra EnsureCreatedAsync() və aşağıdakı bütün ExecuteSqlRawAsync bloklarını SİL —
                 // MSSQL-də cədvəllər migration vasitəsilə yaranır, manual SQL lazım deyil.
 
+                // SQLite üçün Notes cədvəli
                 await db.Database.ExecuteSqlRawAsync(@"
                     CREATE TABLE IF NOT EXISTS Notes (
                         Id TEXT NOT NULL PRIMARY KEY,
@@ -111,8 +112,8 @@ namespace TaskApi
                         Tarix TEXT,
                         Saat TEXT
                     );");
-                // MSSQL-də bu bloku SİL — migration Notes cədvəlini özü yaradır.
 
+                // SQLite üçün ChatMessages cədvəli
                 await db.Database.ExecuteSqlRawAsync(@"
                     CREATE TABLE IF NOT EXISTS ChatMessages (
                         Id TEXT NOT NULL PRIMARY KEY,
@@ -129,16 +130,74 @@ namespace TaskApi
                         FileType TEXT,
                         FileBase64 TEXT
                     );");
-                // MSSQL-də bu bloku SİL — migration ChatMessages cədvəlini özü yaradır.
 
-                // IsNezaretci sütununu əlavə et (köhnə DB üçün)
-                // MSSQL-də: ALTER TABLE TaskAssignments ADD IsNezaretci BIT NOT NULL DEFAULT 0
+                // SQLite üçün IsNezaretci sütunu
                 try
                 {
                     await db.Database.ExecuteSqlRawAsync(
                         "ALTER TABLE TaskAssignments ADD COLUMN IsNezaretci INTEGER NOT NULL DEFAULT 0;");
                 }
-                catch { /* Sütun artıq mövcuddursa xəta ver, keç */ }
+                catch { }
+
+                // SQLite üçün IsSeen sütunu
+                try
+                {
+                    await db.Database.ExecuteSqlRawAsync(
+                        "ALTER TABLE TaskAssignments ADD COLUMN IsSeen INTEGER NOT NULL DEFAULT 0;");
+                }
+                catch { }
+
+                // SQLite üçün Muessise Logo sütunu
+                try
+                {
+                    await db.Database.ExecuteSqlRawAsync(
+                        "ALTER TABLE Muessiseler ADD COLUMN Logo TEXT;");
+                }
+                catch { }
+
+                // MSSQL üçün Notes cədvəli
+                // await db.Database.ExecuteSqlRawAsync(@"
+                //     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Notes' AND xtype='U')
+                //     CREATE TABLE Notes (
+                //         Id NVARCHAR(450) NOT NULL PRIMARY KEY,
+                //         UserLogin NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         Metn NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         Notlar NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         Tamamlanib BIT NOT NULL DEFAULT 0,
+                //         YaranmaTarixi NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         TarixAktiv BIT NOT NULL DEFAULT 0,
+                //         SaatAktiv BIT NOT NULL DEFAULT 0,
+                //         Tarix NVARCHAR(MAX),
+                //         Saat NVARCHAR(MAX)
+                //     );");
+
+                // MSSQL üçün ChatMessages cədvəli
+                // await db.Database.ExecuteSqlRawAsync(@"
+                //     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ChatMessages' AND xtype='U')
+                //     CREATE TABLE ChatMessages (
+                //         Id NVARCHAR(450) NOT NULL PRIMARY KEY,
+                //         SenderLogin NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         SenderName NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         ReceiverLogin NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         ReceiverName NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         Text NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         CreatedAt NVARCHAR(MAX) NOT NULL DEFAULT '',
+                //         IsRead BIT NOT NULL DEFAULT 0,
+                //         IsDeleted BIT NOT NULL DEFAULT 0,
+                //         IsEdited BIT NOT NULL DEFAULT 0,
+                //         FileName NVARCHAR(MAX),
+                //         FileType NVARCHAR(MAX),
+                //         FileBase64 NVARCHAR(MAX)
+                //     );");
+
+                // MSSQL üçün IsNezaretci sütunu
+                // try
+                // {
+                //     await db.Database.ExecuteSqlRawAsync(@"
+                //         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TaskAssignments') AND name = 'IsNezaretci')
+                //         ALTER TABLE TaskAssignments ADD IsNezaretci BIT NOT NULL DEFAULT 0;");
+                // }
+                // catch { /* Sütun artıq mövcuddursa keç */ }
 
                 // SuperAdmin seed
                 var superAdminExists = userManager.Users.Any(u => u.Role == "SuperAdmin");

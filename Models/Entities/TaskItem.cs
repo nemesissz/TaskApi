@@ -18,4 +18,5 @@
     public ICollection<TaskAssignment> Assignments { get; set; } = [];
     public ICollection<TaskComment> Comments { get; set; } = [];
     public ICollection<TaskFile> Files { get; set; } = [];
+    public ICollection<SubTask> SubTasks { get; set; } = [];
 }

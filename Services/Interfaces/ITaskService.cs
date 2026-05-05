@@ -11,4 +11,8 @@ public interface ITaskService
     Task<CommentDto> AddCommentAsync(Guid taskId, Guid authorId, AddCommentDto dto);
     Task DeleteAsync(Guid taskId, Guid requesterId);
     Task<List<TaskResponseDto>> GetTasksScopedAsync(Guid? bolmeId, Guid? muessiseId);
+    Task MarkAsReadAsync(Guid taskId, Guid userId);
+    Task<SubTaskDto> AddSubTaskAsync(Guid taskId, Guid requesterId, string title);
+    Task<SubTaskDto> ToggleSubTaskAsync(Guid taskId, Guid subTaskId, Guid requesterId);
+    Task DeleteSubTaskAsync(Guid taskId, Guid subTaskId, Guid requesterId);
 }

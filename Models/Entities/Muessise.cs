@@ -4,6 +4,7 @@ public class Muessise
     public string Ad { get; set; } = string.Empty;
     public string AdminUsername { get; set; } = string.Empty;
     public DateTime YaranmaTarixi { get; set; } = DateTime.UtcNow;
+    public string? Logo { get; set; }
 
     public ICollection<AppUser> Users { get; set; } = [];
     public ICollection<Bolme> Bolmeler { get; set; } = [];

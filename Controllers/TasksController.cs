@@ -87,6 +87,13 @@ public class TasksController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id}/read")]
+    public async Task<IActionResult> MarkAsRead(Guid id)
+    {
+        await _taskService.MarkAsReadAsync(id, CurrentUserId);
+        return NoContent();
+    }
+
     [HttpPost("{id}/comments")]
     public async Task<IActionResult> AddComment(Guid id, [FromBody] AddCommentDto dto)
     {
@@ -98,6 +105,27 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         await _taskService.DeleteAsync(id, CurrentUserId);
+        return NoContent();
+    }
+
+    [HttpPost("{id}/subtasks")]
+    public async Task<IActionResult> AddSubTask(Guid id, [FromBody] string title)
+    {
+        var result = await _taskService.AddSubTaskAsync(id, CurrentUserId, title);
+        return Ok(result);
+    }
+
+    [HttpPatch("{id}/subtasks/{subTaskId}/toggle")]
+    public async Task<IActionResult> ToggleSubTask(Guid id, Guid subTaskId)
+    {
+        var result = await _taskService.ToggleSubTaskAsync(id, subTaskId, CurrentUserId);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}/subtasks/{subTaskId}")]
+    public async Task<IActionResult> DeleteSubTask(Guid id, Guid subTaskId)
+    {
+        await _taskService.DeleteSubTaskAsync(id, subTaskId, CurrentUserId);
         return NoContent();
     }
 }

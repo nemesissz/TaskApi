@@ -8,6 +8,7 @@ public class MuessiseDto
     public DateTime YaranmaTarixi { get; set; }
     public int UserCount { get; set; }
     public int BolmeCount { get; set; }
+    public string? Logo { get; set; }
 }
 
 public class CreateMuessiseDto
@@ -20,6 +21,13 @@ public class CreateMuessiseDto
     public string AdminUsername { get; set; } = string.Empty;
     [Required, MinLength(6)]
     public string AdminPassword { get; set; } = string.Empty;
+    public string? Logo { get; set; }
+}
+
+public class UpdateMuessiseDto
+{
+    public string? Ad { get; set; }
+    public string? Logo { get; set; }
 }
 
 public class BolmeDto
