@@ -155,6 +155,14 @@ namespace TaskApi
                 }
                 catch { }
 
+                // SQLite üçün TaskItem — CreatorHasNewMessage sütunu
+                try { await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tasks ADD COLUMN CreatorHasNewMessage INTEGER NOT NULL DEFAULT 0;"); } catch { }
+
+                // SQLite üçün AppUser — AtaAdi, Rutbe, Vezife sütunları
+                try { await db.Database.ExecuteSqlRawAsync("ALTER TABLE AspNetUsers ADD COLUMN AtaAdi TEXT;"); } catch { }
+                try { await db.Database.ExecuteSqlRawAsync("ALTER TABLE AspNetUsers ADD COLUMN Rutbe TEXT;"); } catch { }
+                try { await db.Database.ExecuteSqlRawAsync("ALTER TABLE AspNetUsers ADD COLUMN Vezife TEXT;"); } catch { }
+
                 // MSSQL üçün Notes cədvəli
                 // await db.Database.ExecuteSqlRawAsync(@"
                 //     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Notes' AND xtype='U')

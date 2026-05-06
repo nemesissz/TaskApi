@@ -40,6 +40,11 @@ public class BolmeDto
     public int UserCount { get; set; }
 }
 
+public class UpdateBolmeDto
+{
+    public string? Ad { get; set; }
+}
+
 public class CreateBolmeDto
 {
     [Required]

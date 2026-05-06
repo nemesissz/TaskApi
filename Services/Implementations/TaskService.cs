@@ -217,6 +217,15 @@ public class TaskService : ITaskService
         };
 
         _context.TaskComments.Add(comment);
+
+        // Mesaj göndərən xaricindəki bütün iştirakçıların oxunmamış bildirişini yandır
+        foreach (var a in task.Assignments.Where(a => a.AssigneeId != authorId))
+            a.IsSeen = false;
+
+        // Creator başqası tərəfindən mesaj göndərilərsə creator-a da bildiriş
+        if (task.CreatorId != authorId)
+            task.CreatorHasNewMessage = true;
+
         await _context.SaveChangesAsync();
 
         return new CommentDto
@@ -274,10 +283,13 @@ public class TaskService : ITaskService
         var assignment = await _context.TaskAssignments
             .FirstOrDefaultAsync(a => a.TaskId == taskId && a.AssigneeId == userId);
         if (assignment != null && !assignment.IsSeen)
-        {
             assignment.IsSeen = true;
-            await _context.SaveChangesAsync();
-        }
+
+        var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == taskId);
+        if (task != null && task.CreatorId == userId && task.CreatorHasNewMessage)
+            task.CreatorHasNewMessage = false;
+
+        await _context.SaveChangesAsync();
     }
 
     public async Task<SubTaskDto> AddSubTaskAsync(Guid taskId, Guid requesterId, string title)
@@ -356,6 +368,9 @@ public class TaskService : ITaskService
             Oxumamislar = task.Assignments
                 .Where(a => !a.IsSeen)
                 .Select(a => a.Assignee.UserName ?? string.Empty)
+                .Concat(task.CreatorHasNewMessage
+                    ? new[] { task.Creator.UserName ?? string.Empty }
+                    : Array.Empty<string>())
                 .ToList(),
             Assignees = task.Assignments
                 .OrderByDescending(a => a.IsNezaretci)

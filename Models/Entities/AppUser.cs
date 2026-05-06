@@ -5,8 +5,11 @@ public class AppUser : IdentityUser<Guid>
     public string FullName { get; set; } = string.Empty;
     public string? Department { get; set; }
     public string Role { get; set; } = "İşçi";
+    public string? AtaAdi { get; set; }
+    public string? Rutbe { get; set; }
+    public string? Vezife { get; set; }
     public DateTime? LastLoginAt { get; set; }
-
+    
     public Guid? MuessiseId { get; set; }
     public Guid? BolmeId { get; set; }
 

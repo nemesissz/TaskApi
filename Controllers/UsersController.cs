@@ -40,6 +40,9 @@ namespace TaskApi.Controllers
             Username = u.UserName ?? string.Empty,
             Role = u.Role,
             Department = u.Department,
+            AtaAdi = u.AtaAdi,
+            Rutbe = u.Rutbe,
+            Vezife = u.Vezife,
             MuessiseId = u.MuessiseId,
             BolmeId = u.BolmeId,
             LastLoginAt = u.LastLoginAt
@@ -78,8 +81,19 @@ namespace TaskApi.Controllers
 
             user.FullName = dto.FullName;
             user.Role = dto.Role;
+            user.AtaAdi = dto.AtaAdi;
+            user.Rutbe = dto.Rutbe;
+            user.Vezife = dto.Vezife;
             if (dto.MuessiseId.HasValue) user.MuessiseId = dto.MuessiseId;
             if (dto.BolmeId.HasValue) user.BolmeId = dto.BolmeId;
+
+            if (!string.IsNullOrWhiteSpace(dto.Username) && dto.Username != user.UserName)
+            {
+                var existing = await _userManager.FindByNameAsync(dto.Username);
+                if (existing != null)
+                    return BadRequest("Bu login artıq istifadə olunub.");
+                user.UserName = dto.Username;
+            }
 
             var updateResult = await _userManager.UpdateAsync(user);
             if (!updateResult.Succeeded)

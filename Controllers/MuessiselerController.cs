@@ -86,7 +86,8 @@ namespace TaskApi.Controllers
                 AdminUsername = m.AdminUsername,
                 YaranmaTarixi = m.YaranmaTarixi,
                 UserCount = m.Users.Count,
-                BolmeCount = m.Bolmeler.Count
+                BolmeCount = m.Bolmeler.Count,
+                Logo = m.Logo
             });
         }
 
@@ -140,7 +141,12 @@ namespace TaskApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateMuessiseDto dto)
         {
-            if (!await IsSuperAdmin()) return Forbid();
+            var current = await GetCurrentUser();
+            if (current is null) return Unauthorized();
+
+            // SuperAdmin hər müəssisəni, Admin yalnız özününkünü yeniləyə bilər
+            if (current.Role != "SuperAdmin" && !(current.Role == "Admin" && current.MuessiseId == id))
+                return Forbid();
 
             var muessise = await _context.Muessiseler.FindAsync(id);
             if (muessise is null) return NotFound();

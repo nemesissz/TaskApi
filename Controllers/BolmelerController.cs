@@ -129,6 +129,29 @@ namespace TaskApi.Controllers
             });
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateBolmeDto dto)
+        {
+            var bolme = await _context.Bolmeler.FindAsync(id);
+            if (bolme is null) return NotFound();
+
+            if (!await CanManageMuessise(bolme.MuessiseId))
+                return Forbid();
+
+            if (!string.IsNullOrWhiteSpace(dto.Ad))
+                bolme.Ad = dto.Ad.Trim();
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new BolmeDto
+            {
+                Id = bolme.Id,
+                Ad = bolme.Ad,
+                MuessiseId = bolme.MuessiseId,
+                AdminUsername = bolme.AdminUsername
+            });
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

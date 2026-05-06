@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using TaskApi.Models.Dtos;
 
 namespace TaskApi.Controllers
 {
@@ -101,6 +102,42 @@ namespace TaskApi.Controllers
                 BolmeId = user.BolmeId,
                 LastLoginAt = user.LastLoginAt
             });
+        }
+
+        [Authorize]
+        [HttpPut("change-credentials")]
+        public async Task<IActionResult> ChangeCredentials([FromBody] ChangeCredentialsDto dto)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null) return Unauthorized();
+
+            var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, dto.CurrentPassword, lockoutOnFailure: false);
+            if (!passwordCheck.Succeeded)
+                return BadRequest("Cari şifrə yanlışdır.");
+
+            if (!string.IsNullOrWhiteSpace(dto.NewUsername) && dto.NewUsername != user.UserName)
+            {
+                var existing = await _userManager.FindByNameAsync(dto.NewUsername);
+                if (existing != null)
+                    return BadRequest("Bu login artıq istifadə olunub.");
+
+                user.UserName = dto.NewUsername;
+                var updateResult = await _userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
+                    return BadRequest(updateResult.Errors.Select(e => e.Description));
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.NewPassword))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var passResult = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+                if (!passResult.Succeeded)
+                    return BadRequest(passResult.Errors.Select(e => e.Description));
+            }
+
+            var newToken = GenerateJwtToken(user);
+            return Ok(new { message = "Məlumatlar yeniləndi.", token = newToken });
         }
 
         private string GenerateJwtToken(AppUser user)

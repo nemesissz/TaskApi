@@ -9,6 +9,7 @@
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsCompleted { get; set; }
     public DateTime? CompletedAt { get; set; }
+    public bool CreatorHasNewMessage { get; set; } = false;
 
     public Guid CreatorId { get; set; }
     public AppUser Creator { get; set; } = null!;
